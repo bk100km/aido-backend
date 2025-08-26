@@ -1,5 +1,47 @@
-# 디폴트 무시된 파일
-/shelf/
-/workspace.xml
-# 에디터 기반 HTTP 클라이언트 요청
-/httpRequests/
+### IntelliJ IDEA ###
+# 사용자별 환경설정, 캐시
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# 플러그인 캐시
+.idea_modules/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/httpRequests/
+.idea/shelf/
+
+# IntelliJ에서 생성하는 build, out 디렉토리
+out/
+build/
+
+# IDE가 생성하는 임시 파일
+*.swp
+*.swo
+*~
+
+# OS 별 불필요한 파일
+.DS_Store
+Thumbs.db
+
+### Gradle ###
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Maven ###
+target/
+
+### Logs ###
+*.log
+
+### JVM ###
+hs_err_pid*
+replay_pid*
+
+### Others ###
+# 환경변수 파일(있다면)
+*.env
