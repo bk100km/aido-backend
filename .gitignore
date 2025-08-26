@@ -45,3 +45,6 @@ replay_pid*
 ### Others ###
 # 환경변수 파일(있다면)
 *.env
+/gradle/wrapper/
+/gradlew
+/gradlew.bat
