@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIDO Backend - Home</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="home-content">
+        <div class="container">
+            <h1 class="home-title">AIDO Backend</h1>
+            <p class="home-subtitle">
+                OAuth 로그인 테스트용 온보딩 페이지 by AI.DO
+            </p>
+            <p class="home-subtitle">
+                Google, Apple, Kakao 계정으로 간편하게 로그인하세요
+            </p>
+            <a th:href="@{/login}" class="home-btn">로그인 시작</a>
+        </div>
+    </div>
+</body>
+</html>

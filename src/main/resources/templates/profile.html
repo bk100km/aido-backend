@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIDO Backend - Profile</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">AIDO Backend</div>
+            <div class="user-info">
+                <span th:text="'안녕하세요, ' + ${userName} + '님!'">안녕하세요!</span>
+                <a th:href="@{/dashboard}" class="btn">대시보드</a>
+                <a th:href="@{/logout}" class="logout-btn">로그아웃</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h1 class="welcome-title">프로필</h1>
+            
+            <div class="user-details">
+                <h3>상세 정보</h3>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; align-items: center;">
+                    <strong>사용자 ID:</strong>
+                    <span th:text="${userId}">1</span>
+                    
+                    <strong>이름:</strong>
+                    <span th:text="${userName}">사용자명</span>
+                    
+                    <strong>이메일:</strong>
+                    <span th:text="${userEmail}">user@example.com</span>
+                    
+                    <strong>로그인 방식:</strong>
+                    <span>OAuth 2.0</span>
+                    
+                    <strong>계정 상태:</strong>
+                    <span style="color: green;">활성</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>계정 관리</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                    <a th:href="@{/dashboard}" class="btn">대시보드로 돌아가기</a>
+                    <a th:href="@{/logout}" class="logout-btn">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIDO Backend - Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">AIDO Backend</div>
+            <div class="user-info">
+                <span th:text="'안녕하세요, ' + ${userName} + '님!'">안녕하세요!</span>
+                <a th:href="@{/profile}" class="btn">프로필</a>
+                <a th:href="@{/logout}" class="logout-btn">로그아웃</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- 성공 메시지 -->
+        <div th:if="${success}" class="alert alert-success">
+            <span th:text="${successMessage}">로그인 성공!</span>
+        </div>
+        
+        <div class="card">
+            <h1 class="welcome-title">대시보드</h1>
+            
+            <div class="user-details">
+                <h3>사용자 정보</h3>
+                <p><strong>이름:</strong> <span th:text="${userName}">사용자명</span></p>
+                <p><strong>이메일:</strong> <span th:text="${userEmail}">user@example.com</span></p>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>사용 가능한 메뉴</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                    <a th:href="@{/profile}" class="btn">프로필 보기</a>
+                    <a th:href="@{/swagger-ui/index.html}" class="btn" target="_blank">API 문서</a>
+                    <a th:href="@{/actuator/health}" class="btn" target="_blank">Health Check</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
