@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <springProfile name="!prod">
+        <!-- Console appender for development -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <timeZone>UTC</timeZone>
+                    </timestamp>
+                    <version/>
+                    <logLevel/>
+                    <message/>
+                    <mdc/>
+                    <arguments/>
+                    <stackTrace/>
+                    <pattern>
+                        <pattern>
+                            {
+                            "traceId": "%X{traceId:-}",
+                            "spanId": "%X{spanId:-}",
+                            "service": "aido-backend",
+                            "environment": "${spring.profiles.active:-default}",
+                            "logger": "%logger",
+                            "thread": "%thread"
+                            }
+                        </pattern>
+                    </pattern>
+                </providers>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    
+    <springProfile name="prod">
+        <!-- JSON appender for production -->
+        <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <timeZone>UTC</timeZone>
+                    </timestamp>
+                    <version/>
+                    <logLevel/>
+                    <message/>
+                    <mdc/>
+                    <arguments/>
+                    <stackTrace/>
+                    <pattern>
+                        <pattern>
+                            {
+                            "traceId": "%X{traceId:-}",
+                            "spanId": "%X{spanId:-}",
+                            "service": "aido-backend",
+                            "environment": "production",
+                            "logger": "%logger",
+                            "thread": "%thread",
+                            "host": "${HOSTNAME:-unknown}",
+                            "pod": "${POD_NAME:-unknown}",
+                            "node": "${NODE_NAME:-unknown}"
+                            }
+                        </pattern>
+                    </pattern>
+                </providers>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+    
+    <!-- Specific logger levels -->
+    <logger name="com.aido.backend" level="DEBUG"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="com.aido.backend.filter.RequestResponseLoggingFilter" level="INFO"/>
+</configuration>
