@@ -9,19 +9,19 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://0b51c4e4f6d6.ngrok-free.app/login/oauth2/code/{registrationId}"
             client-name: Google
           
-          apple:
-            client-id: ${APPLE_CLIENT_ID:disabled}
-            client-secret: ${APPLE_CLIENT_SECRET:disabled}
-            authorization-grant-type: authorization_code
-            client-authentication-method: client_secret_post
-            scope:
-              - name
-              - email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            client-name: Apple
+#          apple:
+#            client-id: ${APPLE_CLIENT_ID:disabled}
+#            client-secret: ${APPLE_CLIENT_SECRET:disabled}
+#            authorization-grant-type: authorization_code
+#            client-authentication-method: client_secret_post
+#            scope:
+#              - name
+#              - email
+#            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+#            client-name: Apple
           
           kakao:
             client-id: ${KAKAO_CLIENT_ID:disabled}
@@ -31,7 +31,7 @@ spring:
             scope:
               - profile_nickname
               - account_email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://0b51c4e4f6d6.ngrok-free.app/login/oauth2/code/{registrationId}"
             client-name: Kakao
         
         provider:

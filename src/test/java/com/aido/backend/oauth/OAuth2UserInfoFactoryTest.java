@@ -30,22 +30,22 @@ class OAuth2UserInfoFactoryTest {
         assertThat(userInfo.getEmail()).isEqualTo("john@gmail.com");
     }
 
-    @Test
-    @DisplayName("Should create Apple OAuth2 user info")
-    void shouldCreateAppleOAuth2UserInfo() {
-        // Given
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("sub", "apple123");
-        attributes.put("email", "user@privaterelay.appleid.com");
-
-        // When
-        OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo("apple", attributes);
-
-        // Then
-        assertThat(userInfo).isInstanceOf(AppleOAuth2UserInfo.class);
-        assertThat(userInfo.getId()).isEqualTo("apple123");
-        assertThat(userInfo.getEmail()).isEqualTo("user@privaterelay.appleid.com");
-    }
+//    @Test
+//    @DisplayName("Should create Apple OAuth2 user info")
+//    void shouldCreateAppleOAuth2UserInfo() {
+//        // Given
+//        Map<String, Object> attributes = new HashMap<>();
+//        attributes.put("sub", "apple123");
+//        attributes.put("email", "user@privaterelay.appleid.com");
+//
+//        // When
+//        OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo("apple", attributes);
+//
+//        // Then
+//        assertThat(userInfo).isInstanceOf(AppleOAuth2UserInfo.class);
+//        assertThat(userInfo.getId()).isEqualTo("apple123");
+//        assertThat(userInfo.getEmail()).isEqualTo("user@privaterelay.appleid.com");
+//    }
 
     @Test
     @DisplayName("Should create Kakao OAuth2 user info")

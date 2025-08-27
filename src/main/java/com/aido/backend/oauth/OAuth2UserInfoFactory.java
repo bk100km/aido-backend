@@ -14,7 +14,7 @@ public class OAuth2UserInfoFactory {
         
         return switch (provider) {
             case GOOGLE -> new GoogleOAuth2UserInfo(attributes);
-            case APPLE -> new AppleOAuth2UserInfo(attributes);
+//            case APPLE -> new AppleOAuth2UserInfo(attributes);
             case KAKAO -> new KakaoOAuth2UserInfo(attributes);
             default -> throw new IllegalArgumentException("Sorry! Login with " + registrationId + " is not supported yet.");
         };
