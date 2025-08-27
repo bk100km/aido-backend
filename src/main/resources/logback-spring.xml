@@ -81,4 +81,6 @@
     <logger name="org.hibernate.SQL" level="DEBUG"/>
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
     <logger name="com.aido.backend.filter.RequestResponseLoggingFilter" level="INFO"/>
+    <logger name="com.aido.backend.interceptor.ClientLoggingInterceptor" level="INFO"/>
+    <logger name="com.aido.backend.filter.OAuthTraceFilter" level="DEBUG"/>
 </configuration>

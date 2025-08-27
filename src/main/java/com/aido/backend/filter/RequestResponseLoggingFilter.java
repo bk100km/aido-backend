@@ -11,12 +11,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -36,59 +36,120 @@ public class RequestResponseLoggingFilter implements Filter {
 
         long startTime = System.currentTimeMillis();
 
-        logRequest(requestWrapper);
-
         try {
             chain.doFilter(requestWrapper, responseWrapper);
         } finally {
             long duration = System.currentTimeMillis() - startTime;
-            logResponse(responseWrapper, duration);
+            
+            // 302 리다이렉션 체크
+            if (isRedirection(responseWrapper.getStatus()) && isOAuthRelated(requestWrapper)) {
+                logOAuthRedirection(requestWrapper, responseWrapper);
+            }
+            
+            logOneLineApi(requestWrapper, responseWrapper, duration);
             responseWrapper.copyBodyToResponse();
         }
     }
 
-    private void logRequest(ContentCachingRequestWrapper request) {
-        Map<String, Object> requestInfo = new HashMap<>();
-        requestInfo.put("method", request.getMethod());
-        requestInfo.put("uri", request.getRequestURI());
-        
+    private void logOneLineApi(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response, long duration) {
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
         if (request.getQueryString() != null) {
-            requestInfo.put("query_string", request.getQueryString());
+            uri += "?" + request.getQueryString();
         }
         
-        // 중요한 헤더만 로깅
-        String userAgent = request.getHeader("User-Agent");
-        String contentType = request.getHeader("Content-Type");
-        String authorization = request.getHeader("Authorization");
+        // Request headers 수집
+        Map<String, String> requestHeaders = getImportantHeaders(request);
         
-        if (userAgent != null) requestInfo.put("user_agent", userAgent);
-        if (contentType != null) requestInfo.put("content_type", contentType);
-        if (authorization != null) requestInfo.put("has_auth", "true");
-        
-        String body = getStringValue(request.getContentAsByteArray(), request.getCharacterEncoding());
-        if (!body.isEmpty() && body.length() < 1000) { // 큰 body는 제외
-            requestInfo.put("body_preview", body.substring(0, Math.min(body.length(), 200)));
+        // Request body 수집
+        String requestBody = getStringValue(request.getContentAsByteArray(), request.getCharacterEncoding());
+        if (requestBody.length() > 1000) {
+            requestBody = requestBody.substring(0, 1000) + "...";
         }
         
-        LoggingUtils.logRequest(logger, request.getMethod(), request.getRequestURI(), userAgent, requestInfo);
+        // Response headers 수집
+        Map<String, String> responseHeaders = new HashMap<>();
+        for (String headerName : response.getHeaderNames()) {
+            if (isImportantHeader(headerName)) {
+                responseHeaders.put(headerName, response.getHeader(headerName));
+            }
+        }
+        
+        // Response body 수집
+        String responseBody = getStringValue(response.getContentAsByteArray(), response.getCharacterEncoding());
+        if (responseBody.length() > 1000) {
+            responseBody = responseBody.substring(0, 1000) + "...";
+        }
+        
+        LoggingUtils.logOneLineApi(logger, method, uri, requestHeaders, requestBody, 
+                                 response.getStatus(), responseHeaders, responseBody, duration);
     }
-
-    private void logResponse(ContentCachingResponseWrapper response, long duration) {
-        Map<String, Object> responseInfo = new HashMap<>();
+    
+    private Map<String, String> getImportantHeaders(HttpServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        Enumeration<String> headerNames = request.getHeaderNames();
         
-        // 중요한 헤더만 로깅
-        String contentType = response.getHeader("Content-Type");
-        String location = response.getHeader("Location");
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            if (isImportantHeader(headerName)) {
+                String headerValue = request.getHeader(headerName);
+                // Authorization 헤더는 마스킹
+                if ("Authorization".equalsIgnoreCase(headerName) && headerValue != null) {
+                    headerValue = maskSensitiveData(headerValue);
+                }
+                headers.put(headerName, headerValue);
+            }
+        }
+        return headers;
+    }
+    
+    private boolean isImportantHeader(String headerName) {
+        if (headerName == null) return false;
+        String lowerName = headerName.toLowerCase();
+        return lowerName.equals("content-type") || 
+               lowerName.equals("authorization") || 
+               lowerName.equals("user-agent") ||
+               lowerName.equals("accept") ||
+               lowerName.equals("accept-language") ||
+               lowerName.equals("location") ||
+               lowerName.equals("cache-control") ||
+               lowerName.startsWith("x-");
+    }
+    
+    private String maskSensitiveData(String value) {
+        if (value == null || value.length() <= 8) {
+            return "*****";
+        }
+        return value.substring(0, 4) + "*****" + value.substring(value.length() - 4);
+    }
+    
+    private boolean isRedirection(int status) {
+        return status >= 300 && status < 400;
+    }
+    
+    private boolean isOAuthRelated(ContentCachingRequestWrapper request) {
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
         
-        if (contentType != null) responseInfo.put("content_type", contentType);
-        if (location != null) responseInfo.put("location", location);
-        
-        String body = getStringValue(response.getContentAsByteArray(), response.getCharacterEncoding());
-        if (!body.isEmpty() && body.length() < 1000) { // 큰 body는 제외
-            responseInfo.put("body_preview", body.substring(0, Math.min(body.length(), 200)));
+        return uri.contains("/oauth") || 
+               uri.contains("/login") || 
+               uri.contains("/auth") ||
+               (query != null && (query.contains("code=") || query.contains("state=")));
+    }
+    
+    private void logOAuthRedirection(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
+        String method = request.getMethod();
+        String fromUri = request.getRequestURI();
+        if (request.getQueryString() != null) {
+            fromUri += "?" + request.getQueryString();
         }
         
-        LoggingUtils.logResponse(logger, response.getStatus(), duration, responseInfo);
+        String toLocation = response.getHeader("Location");
+        String userAgent = request.getHeader("User-Agent");
+        String traceId = MDC.get("traceId");
+        
+        LoggingUtils.logRedirection(logger, method, fromUri, toLocation, 
+                                  response.getStatus(), userAgent, traceId);
     }
 
     private String getStringValue(byte[] contentAsByteArray, String characterEncoding) {

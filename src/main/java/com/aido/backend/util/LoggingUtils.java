@@ -74,48 +74,152 @@ public class LoggingUtils {
         }
     }
 
-    public static void logRequest(Logger logger, String method, String uri, String userAgent, Map<String, Object> additionalInfo) {
+    public static void logOneLineApi(Logger logger, String method, String uri, Map<String, String> requestHeaders, 
+                                     String requestBody, int status, Map<String, String> responseHeaders, String responseBody, 
+                                     long duration) {
         try {
             ObjectNode logObject = objectMapper.createObjectNode();
-            logObject.put("type", "http_request");
+            logObject.put("type", "One line log");
             logObject.put("method", method);
             logObject.put("uri", uri);
-            logObject.put("user_agent", userAgent);
-            logObject.put("timestamp", System.currentTimeMillis());
-            
-            if (additionalInfo != null) {
-                additionalInfo.forEach((key, value) -> {
-                    if (value != null) {
-                        logObject.put(key, value.toString());
-                    }
-                });
-            }
-            
-            logger.info(objectMapper.writeValueAsString(logObject));
-        } catch (JsonProcessingException e) {
-            logger.info("type=http_request, method={}, uri={}", method, uri);
-        }
-    }
-
-    public static void logResponse(Logger logger, int status, long duration, Map<String, Object> additionalInfo) {
-        try {
-            ObjectNode logObject = objectMapper.createObjectNode();
-            logObject.put("type", "http_response");
             logObject.put("status", status);
             logObject.put("duration_ms", duration);
             logObject.put("timestamp", System.currentTimeMillis());
             
-            if (additionalInfo != null) {
-                additionalInfo.forEach((key, value) -> {
-                    if (value != null) {
-                        logObject.put(key, value.toString());
-                    }
-                });
+            // Request 정보
+            ObjectNode requestNode = objectMapper.createObjectNode();
+            if (requestHeaders != null && !requestHeaders.isEmpty()) {
+                ObjectNode reqHeadersNode = objectMapper.createObjectNode();
+                requestHeaders.forEach(reqHeadersNode::put);
+                requestNode.set("headers", reqHeadersNode);
+            }
+            if (requestBody != null && !requestBody.trim().isEmpty()) {
+                requestNode.put("body", requestBody);
+            }
+            if (requestNode.size() > 0) {
+                logObject.set("request", requestNode);
+            }
+            
+            // Response 정보
+            ObjectNode responseNode = objectMapper.createObjectNode();
+            if (responseHeaders != null && !responseHeaders.isEmpty()) {
+                ObjectNode resHeadersNode = objectMapper.createObjectNode();
+                responseHeaders.forEach(resHeadersNode::put);
+                responseNode.set("headers", resHeadersNode);
+            }
+            if (responseBody != null && !responseBody.trim().isEmpty()) {
+                responseNode.put("body", responseBody);
+            }
+            if (responseNode.size() > 0) {
+                logObject.set("response", responseNode);
             }
             
             logger.info(objectMapper.writeValueAsString(logObject));
         } catch (JsonProcessingException e) {
-            logger.info("type=http_response, status={}, duration_ms={}", status, duration);
+            logger.info("One line log: {} {} - {} ({}ms)", method, uri, status, duration);
         }
+    }
+    
+    public static void logOneLineClientApi(Logger logger, String method, String url, Map<String, String> requestHeaders, 
+                                           String requestBody, int status, Map<String, String> responseHeaders, 
+                                           String responseBody, long duration, String target) {
+        try {
+            ObjectNode logObject = objectMapper.createObjectNode();
+            logObject.put("type", "Client One line log");
+            logObject.put("target", target);
+            logObject.put("method", method);
+            logObject.put("url", url);
+            logObject.put("status", status);
+            logObject.put("duration_ms", duration);
+            logObject.put("timestamp", System.currentTimeMillis());
+            
+            // Request 정보
+            ObjectNode requestNode = objectMapper.createObjectNode();
+            if (requestHeaders != null && !requestHeaders.isEmpty()) {
+                ObjectNode reqHeadersNode = objectMapper.createObjectNode();
+                requestHeaders.forEach(reqHeadersNode::put);
+                requestNode.set("headers", reqHeadersNode);
+            }
+            if (requestBody != null && !requestBody.trim().isEmpty()) {
+                requestNode.put("body", requestBody);
+            }
+            if (requestNode.size() > 0) {
+                logObject.set("request", requestNode);
+            }
+            
+            // Response 정보
+            ObjectNode responseNode = objectMapper.createObjectNode();
+            if (responseHeaders != null && !responseHeaders.isEmpty()) {
+                ObjectNode resHeadersNode = objectMapper.createObjectNode();
+                responseHeaders.forEach(resHeadersNode::put);
+                responseNode.set("headers", resHeadersNode);
+            }
+            if (responseBody != null && !responseBody.trim().isEmpty()) {
+                responseNode.put("body", responseBody);
+            }
+            if (responseNode.size() > 0) {
+                logObject.set("response", responseNode);
+            }
+            
+            logger.info(objectMapper.writeValueAsString(logObject));
+        } catch (JsonProcessingException e) {
+            logger.info("Client One line log: {} {} {} - {} ({}ms)", target, method, url, status, duration);
+        }
+    }
+    
+    public static void logRedirection(Logger logger, String method, String fromUri, String toLocation, 
+                                     int status, String userAgent, String traceId) {
+        try {
+            ObjectNode logObject = objectMapper.createObjectNode();
+            logObject.put("type", "OAuth Redirection log");
+            logObject.put("method", method);
+            logObject.put("from_uri", fromUri);
+            logObject.put("to_location", maskRedirectUrl(toLocation));
+            logObject.put("status", status);
+            logObject.put("timestamp", System.currentTimeMillis());
+            
+            if (userAgent != null) {
+                logObject.put("user_agent", userAgent);
+            }
+            
+            if (traceId != null && !traceId.trim().isEmpty()) {
+                logObject.put("trace_id", traceId);
+            }
+            
+            // OAuth 플로우 단계 추출
+            String oauthStep = extractOAuthStep(fromUri, toLocation);
+            if (oauthStep != null) {
+                logObject.put("oauth_step", oauthStep);
+            }
+            
+            logger.info(objectMapper.writeValueAsString(logObject));
+        } catch (JsonProcessingException e) {
+            logger.info("OAuth Redirection: {} {} -> {} ({})", method, fromUri, maskRedirectUrl(toLocation), status);
+        }
+    }
+    
+    private static String maskRedirectUrl(String url) {
+        if (url == null) return null;
+        
+        // OAuth 관련 민감한 파라미터들 마스킹
+        return url.replaceAll("(code=)[^&]*", "$1*****")
+                  .replaceAll("(access_token=)[^&]*", "$1*****") 
+                  .replaceAll("(refresh_token=)[^&]*", "$1*****")
+                  .replaceAll("(client_secret=)[^&]*", "$1*****")
+                  .replaceAll("(state=)[^&]*", "$1*****");
+    }
+    
+    private static String extractOAuthStep(String fromUri, String toLocation) {
+        if (fromUri == null) return null;
+        
+        if (fromUri.contains("/oauth2/authorization/")) {
+            return "oauth_initiation";
+        } else if (fromUri.contains("/login/oauth2/code/")) {
+            return "oauth_callback";
+        } else if (toLocation != null && toLocation.contains("oauth")) {
+            return "oauth_provider_redirect";
+        }
+        
+        return null;
     }
 }
